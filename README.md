@@ -1,60 +1,36 @@
-# Mori — a little clarity
+# Mori — local interview demo
 
-Mori is a polished Flutter chat app for students: a calm, responsive conversation screen with suggested prompts and a Groq-powered assistant. The Flutter client talks to a small FastAPI service so your Groq secret stays on the server and out of the mobile app.
+Mori is a Flutter chat app with a small FastAPI service that calls Groq. Both the website and API run on your computer. There is no hosting deployment configuration in this project.
 
-## Run the Flutter app
+## Run the local API
 
-Install Flutter (already installed at `C:\Users\Subhash\development\flutter`) and an Android emulator or connect an Android phone with USB debugging enabled.
-
-```powershell
-flutter pub get
-flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000
-```
-
-`10.0.2.2` lets the Android emulator reach a server running on your computer. For a physical phone, use your computer's LAN IP in place of `10.0.2.2`. If testing the Flutter web build locally, use `http://localhost:8000`.
-
-## Start the API locally
-
-Create a Groq API key at [console.groq.com/keys](https://console.groq.com/keys), then set it in PowerShell. Never put the key in Dart code, a `--dart-define`, or a public Git repository.
+Open PowerShell in `C:\Users\Subhash\projects\chatbot\server` and install the dependencies once:
 
 ```powershell
-cd server
-py -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-$env:GROQ_API_KEY = "your-groq-api-key"
-uvicorn main:app --reload --port 8000
+py -m pip install -r requirements.txt
 ```
 
-The API health check is at `http://localhost:8000/health`.
-
-## Deploy the API to Render
-
-1. Push this project to a GitHub repository.
-2. In Render, choose **New + → Blueprint** and select that repository. Render reads `render.yaml` and creates `mori-chat-api`.
-3. In the Render service's **Environment** settings, set `GROQ_API_KEY` to your Groq key. Keep it secret. `GROQ_MODEL` defaults to `llama-3.3-70b-versatile`.
-4. Wait for deploy to finish and confirm `https://YOUR-SERVICE.onrender.com/health` returns `{"status":"ok",...}`.
-5. Run Flutter using your service URL:
+Start the API:
 
 ```powershell
-flutter run --dart-define=API_BASE_URL=https://YOUR-SERVICE.onrender.com
+py -m uvicorn main:app --reload --port 8000
 ```
 
-The API root at `/` returns a small service status page. Render's free web services may sleep when idle, so the first request after a quiet period can take longer.
+Keep this terminal open. The health check is <http://localhost:8000/health>.
 
-## Show it in the interview
+## Run the website locally
 
-- Open the Flutter app on the emulator or Android phone.
-- Tap a suggested prompt or type a question and send it.
-- Explain the flow: Flutter sends a JSON message to FastAPI, the backend reads `GROQ_API_KEY` from its environment, calls Groq, and returns the reply.
-- Mention that keeping API credentials in the backend avoids shipping them in the app bundle.
-
-## Build an Android APK
-
-After deploying the backend, build a release APK with its URL included:
+Open a second PowerShell window in `C:\Users\Subhash\projects\chatbot`:
 
 ```powershell
-flutter build apk --release --dart-define=API_BASE_URL=https://YOUR-SERVICE.onrender.com
+C:\src\flutter\bin\flutter.bat pub get
+C:\src\flutter\bin\flutter.bat run -d web-server --web-port 8080 --dart-define=API_BASE_URL=http://localhost:8000
 ```
 
-The APK will be in `build\app\outputs\flutter-apk\app-release.apk`.
+Open <http://localhost:8080>. To pick up code changes, stop the Flutter command with `Ctrl+C` and run it again. If the browser still shows an old version, hard refresh with `Ctrl+Shift+R`.
+
+## Set up Groq
+
+In Mori, open **Settings**, paste your Groq API key, and click **Save**. The browser stores the key locally and sends it to the API on `localhost:8000` when you chat. The health endpoint's `groq_configured` field only reports whether a key is set in the API process environment; it does not check the browser-saved key.
+
+Never commit an API key to the repository. If you prefer an environment key, set `$env:GROQ_API_KEY` in the API terminal before starting Uvicorn.

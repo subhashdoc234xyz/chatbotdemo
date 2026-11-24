@@ -52,7 +52,7 @@ class _ChatPageState extends State<ChatPage> {
   String? _groqApiKey;
   bool _showApiKey = false;
 
-  // Replace with your deployed Render URL when it is available.
+  // For local web, use localhost. Override this for Android emulators/phones.
   static const _apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: 'http://localhost:8000',
@@ -174,14 +174,25 @@ class _ChatPageState extends State<ChatPage> {
           ),
         ),
       );
-    } catch (_) {
+    } on http.ClientException catch (error) {
       setState(
         () => _messages.add(
-          const ChatMessage(
-            'I couldn’t reach Mori right now. Check that the Render service is running and try again.',
+          ChatMessage(
+            'Could not connect to the Mori API at $_apiBaseUrl. Start the API server and try again. (${error.message})',
             fromUser: false,
           ),
         ),
+      );
+    } on FormatException {
+      setState(
+        () => _messages.add(
+          const ChatMessage('The Mori API returned an unreadable response. Check that the API is running at the configured URL.', fromUser: false),
+        ),
+      );
+    } catch (error) {
+      final message = error.toString().replaceFirst('Exception: ', '');
+      setState(
+        () => _messages.add(ChatMessage(message, fromUser: false)),
       );
     } finally {
       setState(() => _sending = false);

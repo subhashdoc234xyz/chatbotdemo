@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-from typing import Literal
 
 import httpx
 from fastapi import FastAPI, Header, HTTPException
@@ -16,7 +15,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
+    allow_headers=["Content-Type", "X-Groq-Api-Key"],
 )
 
 
@@ -71,9 +70,21 @@ async def chat(body: ChatRequest, x_groq_api_key: str | None = Header(default=No
         raise HTTPException(status_code=502, detail="Could not connect to Groq.") from exc
 
     if response.is_error:
-        if response.status_code == 401:
-            raise HTTPException(status_code=502, detail="Groq rejected the API key. Check GROQ_API_KEY in Render.")
-        raise HTTPException(status_code=502, detail=f"Groq API returned status {response.status_code}.")
+        # Groq's response body contains useful causes (invalid key, model,
+        # quota), and does not contain the submitted API key. Surface a short
+        # provider message so local setup errors can be diagnosed in the UI.
+        try:
+            error_body = response.json()
+            provider_error = error_body.get("error", {})
+            provider_message = provider_error.get("message") if isinstance(provider_error, dict) else None
+        except (ValueError, TypeError):
+            provider_message = None
+        detail = (
+            f"Groq error ({response.status_code}): {provider_message[:300]}"
+            if isinstance(provider_message, str) and provider_message.strip()
+            else f"Groq API returned status {response.status_code}. Check the API key, model, and Groq account limits."
+        )
+        raise HTTPException(status_code=502, detail=detail)
 
     try:
         payload = response.json()
