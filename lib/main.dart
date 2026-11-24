@@ -2,6 +2,7 @@ import 'dart:convert';
 
 // ignore: deprecated_member_use
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -746,14 +747,34 @@ class _ChatPageState extends State<ChatPage> {
                   ? null
                   : Border.all(color: ink.withValues(alpha: .055)),
             ),
-            child: Text(
-              message.text,
-              style: TextStyle(
-                fontSize: 14,
-                height: 1.55,
-                color: message.fromUser ? Colors.white : ink,
-              ),
-            ),
+            child: message.fromUser
+                ? Text(
+                    message.text,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      height: 1.55,
+                      color: Colors.white,
+                    ),
+                  )
+                : MarkdownBody(
+                    data: message.text,
+                    selectable: true,
+                    styleSheet: MarkdownStyleSheet(
+                      p: const TextStyle(fontSize: 14, height: 1.55, color: ink),
+                      h1: const TextStyle(fontSize: 21, height: 1.3, fontWeight: FontWeight.w700, color: ink),
+                      h2: const TextStyle(fontSize: 18, height: 1.3, fontWeight: FontWeight.w700, color: ink),
+                      h3: const TextStyle(fontSize: 16, height: 1.3, fontWeight: FontWeight.w700, color: ink),
+                      strong: const TextStyle(fontWeight: FontWeight.w700, color: ink),
+                      listBullet: const TextStyle(fontSize: 14, height: 1.55, color: ink),
+                      blockquote: const TextStyle(fontSize: 14, height: 1.55, color: muted),
+                      code: const TextStyle(fontSize: 13, color: forest, backgroundColor: sage),
+                      codeblockDecoration: BoxDecoration(
+                        color: canvas,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      blockSpacing: 10,
+                    ),
+                  ),
           ),
           if (message.time != null)
             Padding(
