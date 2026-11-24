@@ -48,7 +48,7 @@ async def chat(body: ChatRequest, x_groq_api_key: str | None = Header(default=No
     if not api_key:
         raise HTTPException(status_code=503, detail="GROQ_API_KEY is not configured on the server.")
 
-    model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+    model = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
     try:
         async with httpx.AsyncClient(timeout=50.0) as client:
             response = await client.post(

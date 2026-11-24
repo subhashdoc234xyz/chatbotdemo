@@ -31,6 +31,6 @@ Open <http://localhost:8080>. To pick up code changes, stop the Flutter command 
 
 ## Set up Groq
 
-In Mori, open **Settings**, paste your Groq API key, and click **Save**. The browser stores the key locally and sends it to the API on `localhost:8000` when you chat. The health endpoint's `groq_configured` field only reports whether a key is set in the API process environment; it does not check the browser-saved key.
+In Mori, open **Settings**, paste your Groq API key, and click **Save**. The browser stores the key locally and sends it to the API on `localhost:8000` when you chat. The API defaults to Groq's `openai/gpt-oss-20b` model. The health endpoint's `groq_configured` field only reports whether a key is set in the API process environment; it does not check the browser-saved key.
 
 Never commit an API key to the repository. If you prefer an environment key, set `$env:GROQ_API_KEY` in the API terminal before starting Uvicorn.
